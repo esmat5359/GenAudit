@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenAudit - Autonomous Web3 Project & Token Auditor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between font-sans">
+    <div class="max-w-4xl mx-auto w-full p-6">
+        <header class="flex justify-between items-center py-6 border-b border-slate-800">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center font-bold text-lg shadow-lg shadow-indigo-600/40">G</div>
+                <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">GenAudit</h1>
+            </div>
+            <span class="text-xs bg-indigo-950 text-indigo-300 border border-indigo-800/60 px-3 py-1 rounded-full">Autonomous AI Security & Trust Auditor</span>
+        </header>
+
+        <main class="my-12 space-y-8">
+            <div class="text-center space-y-3">
+                <h2 class="text-3xl font-extrabold sm:text-4xl text-white">Trustless Web3 Project & Token Audit</h2>
+                <p class="text-slate-400 max-w-xl mx-auto text-sm sm:text-base">Nondeterministically fetch live project context and evaluate security, risk levels, and trust scores through multi-validator consensus.</p>
+            </div>
+
+            <!-- Input Form -->
+            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-5 backdrop-blur-md">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Project Name</label>
+                    <input type="text" id="projectNameInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition text-sm" placeholder="e.g. Uniswap, Aave, Concrete" />
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Project Website / Docs URL</label>
+                    <input type="text" id="projectUrlInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-indigo-500 transition text-sm" placeholder="e.g. https://www.concrete.xyz/" />
+                </div>
+                
+                <button id="auditBtn" onclick="runGenAudit()" class="w-full bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-indigo-950/50 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-shield-halved"></i> Run Autonomous Consensus Audit
+                </button>
+            </div>
+
+            <!-- Status Logs -->
+            <div id="statusContainer" class="hidden p-4 rounded-xl border border-slate-800 bg-slate-900/80 font-mono text-xs space-y-2">
+                <div id="statusStep" class="text-indigo-400 flex items-center gap-2"></div>
+                <div id="txHashDisplay" class="text-slate-500 text-[11px] hidden font-mono">
+                    Transaction Hash: <span id="txHashVal" class="text-cyan-300"></span>
+                </div>
+            </div>
+
+            <!-- Result Display -->
+            <div id="resultBox" class="hidden bg-slate-900/80 border border-indigo-500/30 rounded-2xl p-6 space-y-6 shadow-2xl">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                    <div>
+                        <span class="text-xs text-slate-500 uppercase font-semibold">Audited Entity</span>
+                        <h3 id="displayProjectName" class="text-lg font-bold text-white"></h3>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="riskBadge" class="text-xs font-bold px-3 py-1 rounded-full tracking-wide"></span>
+                        <div class="text-right">
+                            <span class="text-[10px] text-slate-500 uppercase block font-semibold">Trust Score</span>
+                            <span id="displayTrustScore" class="text-xl font-mono font-bold text-cyan-400"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs text-slate-500 uppercase tracking-wider mb-2 font-semibold">Executive Security Summary</h4>
+                    <p id="displaySummary" class="text-slate-200 text-sm bg-slate-950 border border-slate-800 p-4 rounded-xl leading-relaxed"></p>
+                </div>
+
+                <div>
+                    <h4 class="text-xs text-slate-500 uppercase tracking-wider mb-3 font-semibold">Key Security Observations & Findings</h4>
+                    <ul id="findingsList" class="space-y-2 text-xs text-slate-300">
+                        <!-- Dynamic findings -->
+                    </ul>
+                </div>
+                
+                <div class="border-t border-slate-800 pt-3 flex justify-between items-center text-xs text-slate-500 mt-4">
+                    <span>On-Chain Status: <strong class="text-green-400">FINALIZED (Verified by Multi-Validator Consensus)</strong></span>
+                    <button onclick="toggleRawJson()" type="button" class="cursor-pointer text-indigo-400 underline hover:text-cyan-400 transition">View Raw Output</button>
+                </div>
+                <pre id="rawJsonOutput" class="hidden bg-black/60 border border-slate-800 p-4 rounded-xl text-xs font-mono text-cyan-300 overflow-x-auto"></pre>
+            </div>
+        </main>
+    </div>
+
+    <footer class="text-center py-6 border-t border-slate-800 text-xs text-slate-500">
+        Powered by GenLayer Intelligent Contracts & Multi-Node Consensus
+    </footer>
+
+    <script>
+        const CONTRACT_ADDRESS = "0x2Aee5782D0663f7688753786E5FE83dB2e80d8D2";
+
+        async function runGenAudit() {
+            const projectName = document.getElementById('projectNameInput').value.trim();
+            const projectUrl = document.getElementById('projectUrlInput').value.trim();
+            const auditBtn = document.getElementById('auditBtn');
+
+            if (!projectName || !projectUrl) return alert('Please enter both project name and website URL.');
+
+            const statusContainer = document.getElementById('statusContainer');
+            const statusStep = document.getElementById('statusStep');
+            const txHashDisplay = document.getElementById('txHashDisplay');
+            const txHashVal = document.getElementById('txHashVal');
+            const resultBox = document.getElementById('resultBox');
+
+            auditBtn.disabled = true;
+            statusContainer.classList.remove('hidden');
+            resultBox.classList.add('hidden');
+            txHashDisplay.classList.add('hidden');
+
+            statusStep.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Connecting to GenLayer RPC...';
+
+            try {
+                const { createClient } = await import("https://esm.sh/genlayer-js@latest");
+                const { simulator } = await import("https://esm.sh/genlayer-js@latest/chains");
+                const client = createClient({ chain: simulator });
+
+                statusStep.innerHTML = '<i class="fa-solid fa-globe animate-pulse text-indigo-400"></i> Executing writeContract: Fetching live web context & running AI consensus...';
+                
+                const txHash = await client.writeContract({
+                    address: CONTRACT_ADDRESS,
+                    functionName: 'audit_project',
+                    args: [projectName, projectUrl]
+                });
+
+                txHashVal.innerText = txHash.substring(0, 18) + '...';
+                txHashDisplay.classList.remove('hidden');
+
+                statusStep.innerHTML = '<i class="fa-solid fa-network-wired animate-spin text-cyan-400"></i> Waiting for multi-validator consensus (FINALIZED)...';
+                await client.waitForTransactionReceipt({ hash: txHash, status: 'FINALIZED' });
+
+                statusStep.innerHTML = '<i class="fa-solid fa-database text-green-400"></i> Calling readContract: get_last_audit()...';
+                const rawResponse = await client.readContract({
+                    address: CONTRACT_ADDRESS,
+                    functionName: 'get_last_audit',
+                    args: []
+                });
+
+                statusStep.innerHTML = '<i class="fa-solid fa-check text-green-400"></i> Autonomous Audit Completed Successfully!';
+                
+                let parsedData = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
+                renderResult(parsedData, JSON.stringify(parsedData, null, 2));
+
+            } catch (error) {
+                console.error("Execution failed:", error);
+                statusStep.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-400"></i> Error: ${error.message || "Transaction failed."}`;
+            } finally {
+                auditBtn.disabled = false;
+            }
+        }
+
+        function renderResult(data, rawJson) {
+            document.getElementById('displayProjectName').innerText = data.project_name || "Unknown Project";
+            document.getElementById('displayTrustScore').innerText = (data.trust_score !== undefined ? data.trust_score : "50") + " / 100";
+            document.getElementById('displaySummary').innerText = data.summary || "No summary provided.";
+            
+            const badge = document.getElementById('riskBadge');
+            const risk = (data.risk_level || "Medium").toUpperCase();
+            badge.innerText = `Risk: ${risk}`;
+            
+            if (risk === "LOW") {
+                badge.className = "text-xs font-bold px-3 py-1 rounded-full tracking-wide bg-emerald-950 text-emerald-300 border border-emerald-800";
+            } else if (risk === "HIGH" || risk === "CRITICAL") {
+                badge.className = "text-xs font-bold px-3 py-1 rounded-full tracking-wide bg-rose-950 text-rose-300 border border-rose-800";
+            } else {
+                badge.className = "text-xs font-bold px-3 py-1 rounded-full tracking-wide bg-amber-950 text-amber-300 border border-amber-800";
+            }
+
+            const findingsList = document.getElementById('findingsList');
+            findingsList.innerHTML = '';
+            
+            if (data.security_findings && Array.isArray(data.security_findings)) {
+                data.security_findings.forEach(finding => {
+                    const li = document.createElement('li');
+                    li.className = "bg-slate-950 border border-slate-800 p-3 rounded-xl flex items-start gap-2 text-slate-300";
+                    li.innerHTML = `<i class="fa-solid fa-circle-check text-indigo-400 mt-0.5"></i> <span>${finding}</span>`;
+                    findingsList.appendChild(li);
+                });
+            }
+
+            document.getElementById('rawJsonOutput').innerText = rawJson;
+            document.getElementById('resultBox').classList.remove('hidden');
+        }
+
+        function toggleRawJson() {
+            document.getElementById('rawJsonOutput').classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>
