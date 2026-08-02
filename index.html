@@ -284,6 +284,11 @@
         }
 
         async function runGenAudit() {
+            if (!userAccount) {
+                alert('Please connect your MetaMask wallet first!');
+                return;
+            }
+
             const projectName = document.getElementById('projectNameInput').value.trim();
             const projectUrl = document.getElementById('projectUrlInput').value.trim();
             const auditBtn = document.getElementById('auditBtn');
@@ -308,12 +313,13 @@
                 const { simulator } = await import("https://esm.sh/genlayer-js@latest/chains");
                 const client = createClient({ chain: simulator });
 
-                statusStep.innerHTML = '<i class="fa-solid fa-globe animate-pulse text-indigo-400"></i> Executing writeContract: Fetching live web context & running AI consensus...';
+                statusStep.innerHTML = '<i class="fa-solid fa-globe animate-pulse text-indigo-400"></i> Executing writeContract with your wallet account...';
                 
                 const txHash = await client.writeContract({
                     address: CONTRACT_ADDRESS,
                     functionName: 'audit_project',
-                    args: [projectName, projectUrl]
+                    args: [projectName, projectUrl],
+                    account: userAccount
                 });
 
                 txHashVal.innerText = txHash.substring(0, 18) + '...';
