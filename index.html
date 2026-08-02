@@ -1,471 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GenAudit - Autonomous Web3 Trust & Security Platform</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-indigo-500 selection:text-white">
-    
-    <!-- Navbar -->
-    <nav class="bg-slate-900/80 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
-            <div class="flex items-center gap-10">
-                <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('explore')">
-                    <div class="w-10 h-10 bg-gradient-to-tr from-indigo-600 to-cyan-500 rounded-2xl flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-500/30 text-white">G</div>
-                    <div>
-                        <span class="text-xl font-black tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">GenAudit</span>
-                        <span class="block text-[10px] text-indigo-400 font-mono tracking-widest uppercase">Protocol Shield</span>
-                    </div>
-                </div>
-                <div class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
-                    <button onclick="switchTab('explore')" id="navExplore" class="text-indigo-400 font-semibold transition hover:text-white">Explore Audits</button>
-                    <button onclick="switchTab('create')" id="navCreate" class="transition hover:text-white">New Consensus Audit</button>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <button id="authNavBtn" onclick="openAuthModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center gap-2">
-                    <i class="fa-solid fa-user-shield"></i> <span id="authNavText">Sign In / Up</span>
-                </button>
-            </div>
-        </div>
-    </nav>
+async function runGenAudit() {
+    if (!currentUser) {
+        alert('Please sign in or create an account first!');
+        openAuthModal();
+        return;
+    }
 
-    <!-- Clerk-Style Auth Modal -->
-    <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-        <div class="bg-white text-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden p-8 relative animate-in fade-in zoom-in duration-200">
-            <button onclick="closeAuthModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-lg">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            
-            <div class="text-center space-y-2 mb-6">
-                <h3 class="text-2xl font-black tracking-tight text-slate-900">Create your account</h3>
-                <p class="text-xs text-slate-500">Welcome! Please fill in the details to get started.</p>
-            </div>
+    const projectName = document.getElementById('projectNameInput').value.trim();
+    const projectUrl = document.getElementById('projectUrlInput').value.trim();
+    const auditBtn = document.getElementById('auditBtn');
 
-            <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">First name</label>
-                        <input type="text" id="firstName" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="First name" />
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Last name</label>
-                        <input type="text" id="lastName" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="Last name" />
-                    </div>
-                </div>
+    if (!projectName || !projectUrl) return alert('Please enter both project name and website URL.');
 
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Email address</label>
-                    <input type="email" id="emailAddr" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="Enter your email address" />
-                </div>
+    const statusContainer = document.getElementById('statusContainer');
+    const statusStep = document.getElementById('statusStep');
+    const txHashDisplay = document.getElementById('txHashDisplay');
+    const txHashVal = document.getElementById('txHashVal');
+    const resultBox = document.getElementById('resultBox');
 
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Password</label>
-                    <input type="password" id="password" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="Create a password" />
-                </div>
+    auditBtn.disabled = true;
+    statusContainer.classList.remove('hidden');
+    resultBox.classList.add('hidden');
+    txHashDisplay.classList.add('hidden');
 
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/20 text-sm flex items-center justify-center gap-2">
-                    Continue <i class="fa-solid fa-arrow-right text-xs"></i>
-                </button>
-            </form>
+    statusStep.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Connecting to GenVM Decentralized Nodes...';
 
-            <div class="mt-6 pt-4 border-t border-slate-100 text-center text-xs text-slate-400 flex flex-col gap-1">
-                <span>Secured by <strong class="text-slate-700 font-bold">Clerk</strong></span>
-                <span class="text-[10px] text-amber-600 font-mono">Development mode</span>
-            </div>
-        </div>
-    </div>
+    try {
+        const { createClient } = await import("https://esm.sh/genlayer-js@latest");
+        const { simulator } = await import("https://esm.sh/genlayer-js@latest/chains");
+        const client = createClient({ chain: simulator });
 
-    <!-- Main Container -->
-    <main class="max-w-6xl mx-auto w-full px-6 py-12 flex-grow">
+        statusStep.innerHTML = '<i class="fa-solid fa-globe animate-pulse text-indigo-400"></i> Executing on-chain writeContract & AI web scraping...';
         
-        <!-- TAB 1: EXPLORE / HOME DASHBOARD -->
-        <div id="tabExplore" class="space-y-12">
-            <!-- Hero Section -->
-            <div class="text-center space-y-4 py-8 relative overflow-hidden">
-                <div class="absolute inset-0 -z-10 flex items-center justify-center opacity-20 blur-3xl">
-                    <div class="w-96 h-96 bg-indigo-600 rounded-full"></div>
-                    <div class="w-96 h-96 bg-cyan-600 rounded-full"></div>
-                </div>
-                <span class="text-xs bg-indigo-950 text-indigo-300 border border-indigo-800/60 px-4 py-1.5 rounded-full font-mono uppercase tracking-widest">GenVM Multi-Validator Security</span>
-                <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white max-w-3xl mx-auto leading-tight">Autonomous On-Chain Trust & Security Auditor</h1>
-                <p class="text-slate-400 max-w-xl mx-auto text-base sm:text-lg">Leverage live web scraping and multi-validator AI consensus to evaluate Web3 protocols, trust scores, and risk ratings trustlessly.</p>
-                <div class="pt-4 flex justify-center gap-4">
-                    <button onclick="switchTab('create')" class="bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold px-8 py-4 rounded-2xl shadow-xl shadow-indigo-600/30 transition flex items-center gap-2">
-                        <i class="fa-solid fa-shield-halved"></i> Start New Audit
-                    </button>
-                </div>
-            </div>
-
-            <!-- Stats Bar -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl backdrop-blur-sm space-y-1">
-                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Consensus Engine</span>
-                    <h3 class="text-xl font-bold text-white">GenVM Decentralized Nodes</h3>
-                </div>
-                <div class="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl backdrop-blur-sm space-y-1">
-                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Smart Contract</span>
-                    <h3 class="text-sm font-mono font-bold text-cyan-400 mt-2">0x2Aee...d8D2</h3>
-                </div>
-                <div class="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl backdrop-blur-sm space-y-1">
-                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Network Status</span>
-                    <h3 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span> Platform Active
-                    </h3>
-                </div>
-            </div>
-
-            <!-- Featured Protocol Audits -->
-            <div class="space-y-6">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-4">
-                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-fire text-indigo-500"></i> Featured Protocol Audits
-                    </h3>
-                    <span class="text-xs text-slate-500 font-mono">Verified On-Chain</span>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-slate-900/40 border border-slate-800/80 p-6 rounded-2xl space-y-4 hover:border-indigo-500/50 transition">
-                        <div class="flex justify-between items-start">
-                            <span class="font-bold text-white text-lg">Concrete Protocol</span>
-                            <span class="bg-emerald-950 text-emerald-300 border border-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full">Risk: LOW</span>
-                        </div>
-                        <p class="text-slate-400 text-xs line-clamp-2">Robust financial framework with thorough institutional security documentation and verified smart contracts.</p>
-                        <div class="flex justify-between items-center pt-4 border-t border-slate-800/60 text-xs">
-                            <span class="text-slate-500">Trust Score</span>
-                            <span class="font-mono font-bold text-cyan-400 text-sm">94 / 100</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-900/40 border border-slate-800/80 p-6 rounded-2xl space-y-4 hover:border-indigo-500/50 transition">
-                        <div class="flex justify-between items-start">
-                            <span class="font-bold text-white text-lg">Uniswap V3</span>
-                            <span class="bg-emerald-950 text-emerald-300 border border-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full">Risk: LOW</span>
-                        </div>
-                        <p class="text-slate-400 text-xs line-clamp-2">Decentralized exchange protocol backed by extensive battle-tested liquidity pools and formal verification.</p>
-                        <div class="flex justify-between items-center pt-4 border-t border-slate-800/60 text-xs">
-                            <span class="text-slate-500">Trust Score</span>
-                            <span class="font-mono font-bold text-cyan-400 text-sm">98 / 100</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-900/40 border border-slate-800/80 p-6 rounded-2xl space-y-4 hover:border-indigo-500/50 transition">
-                        <div class="flex justify-between items-start">
-                            <span class="font-bold text-white text-lg">Aave Protocol</span>
-                            <span class="bg-amber-950 text-amber-300 border border-amber-800 text-xs font-bold px-2.5 py-1 rounded-full">Risk: MEDIUM</span>
-                        </div>
-                        <p class="text-slate-400 text-xs line-clamp-2">Leading liquidity market protocol with decentralized governance and multi-signature risk parameters.</p>
-                        <div class="flex justify-between items-center pt-4 border-t border-slate-800/60 text-xs">
-                            <span class="text-slate-500">Trust Score</span>
-                            <span class="font-mono font-bold text-cyan-400 text-sm">89 / 100</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dynamic Live Result Card -->
-            <div id="quickResultCard" class="hidden bg-slate-900/80 border border-indigo-500/40 rounded-2xl p-6 shadow-2xl space-y-4">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-4">
-                    <h3 class="font-bold text-white text-lg">Your Latest Live Audit</h3>
-                    <span id="cardRiskBadge" class="text-xs font-bold px-3 py-1 rounded-full"></span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                        <span class="text-slate-500 text-xs block font-semibold uppercase">Project Name</span>
-                        <span id="cardProjectName" class="font-bold text-white text-base"></span>
-                    </div>
-                    <div>
-                        <span class="text-slate-500 text-xs block font-semibold uppercase">Trust Score</span>
-                        <span id="cardTrustScore" class="font-mono font-bold text-cyan-400 text-base"></span>
-                    </div>
-                </div>
-                <div>
-                    <span class="text-slate-500 text-xs block font-semibold uppercase mb-1">Executive Summary</span>
-                    <p id="cardSummary" class="text-slate-300 text-sm bg-slate-950 p-4 rounded-xl border border-slate-800"></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 2: CREATE / RUN AUDIT -->
-        <div id="tabCreate" class="hidden space-y-8 max-w-2xl mx-auto">
-            <div class="space-y-2 text-center">
-                <h2 class="text-3xl font-black tracking-tight text-white">Run Autonomous Audit</h2>
-                <p class="text-slate-400 text-sm">Input the target Web3 protocol to initiate live web scraping and multi-validator AI consensus.</p>
-            </div>
-
-            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6 backdrop-blur-md">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Project Name</label>
-                    <input type="text" id="projectNameInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-200 focus:outline-none focus:border-indigo-500 transition text-sm" placeholder="e.g. Uniswap, ShadowFi, Concrete" />
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Project Website / Docs URL</label>
-                    <input type="text" id="projectUrlInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-200 focus:outline-none focus:border-indigo-500 transition text-sm" placeholder="e.g. https://www.concrete.xyz/" />
-                </div>
-                
-                <button id="auditBtn" onclick="runGenAudit()" class="w-full bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-indigo-950/50 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-shield-halved"></i> Execute Autonomous Consensus Audit
-                </button>
-            </div>
-
-            <!-- Status Logs -->
-            <div id="statusContainer" class="hidden p-4 rounded-xl border border-slate-800 bg-slate-900/90 font-mono text-xs space-y-2">
-                <div id="statusStep" class="text-indigo-400 flex items-center gap-2"></div>
-                <div id="txHashDisplay" class="text-slate-500 text-[11px] hidden font-mono">
-                    Transaction Hash: <span id="txHashVal" class="text-cyan-300"></span>
-                </div>
-            </div>
-
-            <!-- Result Display Box -->
-            <div id="resultBox" class="hidden bg-slate-900/90 border border-indigo-500/40 rounded-2xl p-6 space-y-6 shadow-2xl">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-4">
-                    <div>
-                        <span class="text-xs text-slate-500 uppercase font-semibold">Audited Entity</span>
-                        <h3 id="displayProjectName" class="text-xl font-black text-white"></h3>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <span id="riskBadge" class="text-xs font-bold px-3 py-1 rounded-full tracking-wide"></span>
-                        <div class="text-right">
-                            <span class="text-[10px] text-slate-500 uppercase block font-semibold">Trust Score</span>
-                            <span id="displayTrustScore" class="text-2xl font-mono font-bold text-cyan-400"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <h4 class="text-xs text-slate-500 uppercase tracking-wider mb-2 font-semibold">Executive Security Summary</h4>
-                    <p id="displaySummary" class="text-slate-300 text-sm bg-slate-950 border border-slate-800 p-4 rounded-xl leading-relaxed"></p>
-                </div>
-
-                <div>
-                    <h4 class="text-xs text-slate-500 uppercase tracking-wider mb-3 font-semibold">Key Security Observations & Findings</h4>
-                    <ul id="findingsList" class="space-y-2 text-xs text-slate-300"></ul>
-                </div>
-                
-                <div class="border-t border-slate-800 pt-3 flex justify-between items-center text-xs text-slate-500 mt-4">
-                    <span>On-Chain Status: <strong class="text-emerald-400">FINALIZED (Multi-Validator Consensus)</strong></span>
-                    <button onclick="toggleRawJson()" type="button" class="cursor-pointer text-indigo-400 underline hover:text-cyan-400 font-medium">View Raw Output</button>
-                </div>
-                <pre id="rawJsonOutput" class="hidden bg-black/80 text-cyan-300 border border-slate-800 p-4 rounded-xl text-xs font-mono overflow-x-auto"></pre>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-slate-900/40 border-t border-slate-800/80 py-8 text-center text-xs text-slate-500">
-        Powered by GenLayer Intelligent Contracts & Multi-Node Consensus
-    </footer>
-
-    <script>
-        const CONTRACT_ADDRESS = "0x2Aee5782D0663f7688753786E5FE83dB2e80d8D2";
-        let currentUser = localStorage.getItem('genAuditUser') ? JSON.parse(localStorage.getItem('genAuditUser')) : null;
-
-        window.addEventListener('DOMContentLoaded', () => {
-            if (currentUser) {
-                updateAuthUI(currentUser);
-            }
+        const txHash = await client.writeContract({
+            address: CONTRACT_ADDRESS,
+            functionName: 'audit_project',
+            args: [projectName, projectUrl]
         });
 
-        function openAuthModal() {
-            document.getElementById('authModal').classList.remove('hidden');
-        }
+        txHashVal.innerText = txHash.substring(0, 18) + '...';
+        txHashDisplay.classList.remove('hidden');
 
-        function closeAuthModal() {
-            document.getElementById('authModal').classList.add('hidden');
-        }
+        statusStep.innerHTML = '<i class="fa-solid fa-network-wired animate-spin text-cyan-400"></i> Waiting for multi-validator consensus (FINALIZED)...';
+        await client.waitForTransactionReceipt({ hash: txHash, status: 'FINALIZED' });
 
-        function handleAuthSubmit(event) {
-            event.preventDefault();
-            const firstName = document.getElementById('firstName').value.trim();
-            const lastName = document.getElementById('lastName').value.trim();
-            const email = document.getElementById('emailAddr').value.trim();
+        statusStep.innerHTML = '<i class="fa-solid fa-database text-green-400"></i> Reading finalized audit from contract...';
+        const rawResponse = await client.readContract({
+            address: CONTRACT_ADDRESS,
+            functionName: 'get_last_audit',
+            args: []
+        });
 
-            currentUser = { name: `${firstName} ${lastName}`, email: email };
-            localStorage.setItem('genAuditUser', JSON.stringify(currentUser));
-            
-            updateAuthUI(currentUser);
-            closeAuthModal();
-        }
+        statusStep.innerHTML = '<i class="fa-solid fa-check text-green-400"></i> Autonomous Audit Completed Successfully!';
+        
+        let parsedData = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
+        renderResult(parsedData, JSON.stringify(parsedData, null, 2));
 
-        function updateAuthUI(user) {
-            const btn = document.getElementById('authNavBtn');
-            const txt = document.getElementById('authNavText');
-            txt.innerText = user.name;
-            btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-emerald-600/20 flex items-center gap-2";
-            btn.onclick = () => {
-                if(confirm('Do you want to sign out?')) {
-                    localStorage.removeItem('genAuditUser');
-                    currentUser = null;
-                    location.reload();
-                }
-            };
-        }
-
-        function switchTab(tab) {
-            const exploreTab = document.getElementById('tabExplore');
-            const createTab = document.getElementById('tabCreate');
-            const navExplore = document.getElementById('navExplore');
-            const navCreate = document.getElementById('navCreate');
-
-            if (tab === 'explore') {
-                exploreTab.classList.remove('hidden');
-                createTab.classList.add('hidden');
-                navExplore.className = "text-indigo-400 font-semibold transition hover:text-white";
-                navCreate.className = "transition hover:text-white";
-            } else {
-                exploreTab.classList.add('hidden');
-                createTab.classList.remove('hidden');
-                navCreate.className = "text-indigo-400 font-semibold transition hover:text-white";
-                navExplore.className = "transition hover:text-white";
-            }
-        }
-
-        async function runGenAudit() {
-            if (!currentUser) {
-                alert('Please sign in or create an account first!');
-                openAuthModal();
-                return;
-            }
-
-            const projectName = document.getElementById('projectNameInput').value.trim();
-            const projectUrl = document.getElementById('projectUrlInput').value.trim();
-            const auditBtn = document.getElementById('auditBtn');
-
-            if (!projectName || !projectUrl) return alert('Please enter both project name and website URL.');
-
-            const statusContainer = document.getElementById('statusContainer');
-            const statusStep = document.getElementById('statusStep');
-            const txHashDisplay = document.getElementById('txHashDisplay');
-            const txHashVal = document.getElementById('txHashVal');
-            const resultBox = document.getElementById('resultBox');
-
-            auditBtn.disabled = true;
-            statusContainer.classList.remove('hidden');
-            resultBox.classList.add('hidden');
-            txHashDisplay.classList.add('hidden');
-
-            statusStep.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Initializing GenVM Multi-Validator Consensus...';
-
-            try {
-                const { createClient } = await import("https://esm.sh/genlayer-js@latest");
-                const { simulator } = await import("https://esm.sh/genlayer-js@latest/chains");
-                const client = createClient({ chain: simulator });
-
-                statusStep.innerHTML = '<i class="fa-solid fa-globe animate-pulse text-indigo-400"></i> Executing writeContract: Fetching live web context & running AI consensus...';
-                
-                const txHash = await client.writeContract({
-                    address: CONTRACT_ADDRESS,
-                    functionName: 'audit_project',
-                    args: [projectName, projectUrl]
-                });
-
-                txHashVal.innerText = txHash.substring(0, 18) + '...';
-                txHashDisplay.classList.remove('hidden');
-
-                statusStep.innerHTML = '<i class="fa-solid fa-network-wired animate-spin text-cyan-400"></i> Waiting for multi-validator consensus (FINALIZED)...';
-                await client.waitForTransactionReceipt({ hash: txHash, status: 'FINALIZED' });
-
-                const rawResponse = await client.readContract({
-                    address: CONTRACT_ADDRESS,
-                    functionName: 'get_last_audit',
-                    args: []
-                });
-
-                let parsedData = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
-                renderResult(parsedData, JSON.stringify(parsedData, null, 2));
-
-            } catch (error) {
-                // Dynamic Smart Consensus Response based on User Input (Safe vs Risky)
-                statusStep.innerHTML = '<i class="fa-solid fa-network-wired animate-spin text-cyan-400"></i> Running GenVM Multi-Node Consensus & LLM Verification...';
-                await new Promise(resolve => setTimeout(resolve, 2500));
-                
-                txHashVal.innerText = "0x" + Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('');
-                txHashDisplay.classList.remove('hidden');
-
-                statusStep.innerHTML = '<i class="fa-solid fa-check text-green-400"></i> Autonomous Consensus Reached & Finalized!';
-
-                const lowerName = projectName.toLowerCase();
-                let mockResult;
-
-                if (lowerName.includes('shadow') || lowerName.includes('risk') || lowerName.includes('scam') || lowerName.includes('test')) {
-                    mockResult = {
-                        project_name: projectName,
-                        trust_score: 38,
-                        risk_level: "High",
-                        summary: `The autonomous audit for ${projectName} identified critical risk vectors. Live web scraping from ${projectUrl} exposed incomplete documentation, unverified contract parameters, and centralized administrative keys.`,
-                        security_findings: [
-                            "Warning: Absence of transparent formal verification or up-to-date security audits.",
-                            "High Risk: Multi-validator consensus detected potential centralization vulnerabilities in ownership roles.",
-                            "Critical: Missing active bug bounty program or institutional insurance framework."
-                        ]
-                    };
-                } else {
-                    mockResult = {
-                        project_name: projectName,
-                        trust_score: 93,
-                        risk_level: "Low",
-                        summary: `The autonomous audit for ${projectName} successfully fetched live context from ${projectUrl}. Multi-validator LLM consensus verified secure governance, documentation integrity, and robust on-chain parameters.`,
-                        security_findings: [
-                            "Live web scraping verified active and up-to-date security documentation.",
-                            "Multi-validator nodes confirmed zero critical vulnerabilities in recent deployments.",
-                            "Decentralized governance structure adheres to industry-best trust standards."
-                        ]
-                    };
-                }
-
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                renderResult(mockResult, JSON.stringify(mockResult, null, 2));
-            } finally {
-                auditBtn.disabled = false;
-            }
-        }
-
-        function renderResult(data, rawJson) {
-            document.getElementById('displayProjectName').innerText = data.project_name || "Unknown Project";
-            document.getElementById('displayTrustScore').innerText = (data.trust_score !== undefined ? data.trust_score : "90") + " / 100";
-            document.getElementById('displaySummary').innerText = data.summary || "No summary provided.";
-            
-            document.getElementById('cardProjectName').innerText = data.project_name || "Unknown Project";
-            document.getElementById('cardTrustScore').innerText = (data.trust_score !== undefined ? data.trust_score : "90") + " / 100";
-            document.getElementById('cardSummary').innerText = data.summary || "No summary provided.";
-            document.getElementById('quickResultCard').classList.remove('hidden');
-
-            const badge = document.getElementById('riskBadge');
-            const cardBadge = document.getElementById('cardRiskBadge');
-            const risk = (data.risk_level || "Low").toUpperCase();
-            
-            const badgeClass = risk === "LOW" ? "bg-emerald-950 text-emerald-300 border border-emerald-800" :
-                               (risk === "HIGH" || risk === "CRITICAL" ? "bg-rose-950 text-rose-300 border border-rose-800" : "bg-amber-950 text-amber-300 border border-amber-800");
-            
-            badge.innerText = `Risk: ${risk}`;
-            badge.className = `text-xs font-bold px-3 py-1 rounded-full tracking-wide ${badgeClass}`;
-            cardBadge.innerText = `Risk: ${risk}`;
-            cardBadge.className = `text-xs font-bold px-3 py-1 rounded-full tracking-wide ${badgeClass}`;
-
-            const findingsList = document.getElementById('findingsList');
-            findingsList.innerHTML = '';
-            
-            if (data.security_findings && Array.isArray(data.security_findings)) {
-                data.security_findings.forEach(finding => {
-                    const li = document.createElement('li');
-                    li.className = "bg-slate-950 border border-slate-800 p-3.5 rounded-xl flex items-start gap-2.5 text-slate-300";
-                    li.innerHTML = `<i class="fa-solid fa-circle-check text-indigo-400 mt-0.5"></i> <span>${finding}</span>`;
-                    findingsList.appendChild(li);
-                });
-            }
-
-            document.getElementById('rawJsonOutput').innerText = rawJson;
-            document.getElementById('resultBox').classList.remove('hidden');
-        }
-
-        function toggleRawJson() {
-            document.getElementById('rawJsonOutput').classList.toggle('hidden');
-        }
-    </script>
-</body>
-</html>
+    } catch (error) {
+        console.error("Execution failed:", error);
+        statusStep.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Error: ${error.message || "Transaction failed."}`;
+    } finally {
+        auditBtn.disabled = false;
+    }
+}
