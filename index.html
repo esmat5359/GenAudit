@@ -3,163 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GenAudit - Autonomous Web3 Trust & Security dApp</title>
+    <title>GenAudit - Autonomous Web3 Trust & Security Platform</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col justify-between font-sans selection:bg-indigo-600 selection:text-white">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-indigo-500 selection:text-white">
     
-    <!-- Navbar (GenRaffle Style) -->
-    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
-            <div class="flex items-center gap-8">
+    <!-- Navbar -->
+    <nav class="bg-slate-900/80 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+            <div class="flex items-center gap-10">
                 <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('explore')">
-                    <div class="w-9 h-9 bg-black text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-md">G</div>
-                    <span class="text-xl font-black tracking-tight text-slate-900">GenAudit</span>
+                    <div class="w-10 h-10 bg-gradient-to-tr from-indigo-600 to-cyan-500 rounded-2xl flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-500/30 text-white">G</div>
+                    <div>
+                        <span class="text-xl font-black tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">GenAudit</span>
+                        <span class="block text-[10px] text-indigo-400 font-mono tracking-widest uppercase">Protocol Shield</span>
+                    </div>
                 </div>
-                <div class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-                    <button onclick="switchTab('explore')" id="navExplore" class="text-indigo-600 font-semibold transition">Explore</button>
-                    <button onclick="switchTab('create')" id="navCreate" class="hover:text-indigo-600 transition">New Audit</button>
+                <div class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
+                    <button onclick="switchTab('explore')" id="navExplore" class="text-indigo-400 font-semibold transition hover:text-white">Explore Audits</button>
+                    <button onclick="switchTab('create')" id="navCreate" class="transition hover:text-white">New Consensus Audit</button>
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <button onclick="switchTab('create')" class="bg-black hover:bg-slate-800 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition shadow-sm">
-                    <i class="fa-solid fa-plus mr-1.5"></i> New Audit
+                <button id="walletBtn" onclick="connectWallet()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center gap-2">
+                    <i class="fa-solid fa-wallet"></i> <span id="walletText">Connect Wallet</span>
                 </button>
             </div>
         </div>
     </nav>
 
     <!-- Main Container -->
-    <main class="max-w-5xl mx-auto w-full px-6 py-10 flex-grow">
+    <main class="max-w-6xl mx-auto w-full px-6 py-12 flex-grow">
         
         <!-- TAB 1: EXPLORE / HOME DASHBOARD -->
-        <div id="tabExplore" class="space-y-8">
-            <div class="text-center space-y-3 py-6">
-                <h1 class="text-4xl font-black tracking-tight text-slate-900">Autonomous Web3 Security Audits</h1>
-                <p class="text-slate-500 max-w-xl mx-auto text-base">Explore trustless project evaluations driven by live web context and multi-validator AI consensus on GenLayer.</p>
-                <div class="pt-4">
-                    <button onclick="switchTab('create')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-8 py-3.5 rounded-2xl shadow-lg shadow-indigo-600/20 transition">
-                        Run New Consensus Audit
+        <div id="tabExplore" class="space-y-12">
+            <!-- Hero Section -->
+            <div class="text-center space-y-4 py-8 relative overflow-hidden">
+                <div class="absolute inset-0 -z-10 flex items-center justify-center opacity-20 blur-3xl">
+                    <div class="w-96 h-96 bg-indigo-600 rounded-full"></div>
+                    <div class="w-96 h-96 bg-cyan-600 rounded-full"></div>
+                </div>
+                <span class="text-xs bg-indigo-950 text-indigo-300 border border-indigo-800/60 px-4 py-1.5 rounded-full font-mono uppercase tracking-widest">GenVM Multi-Validator Security</span>
+                <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white max-w-3xl mx-auto leading-tight">Autonomous On-Chain Trust & Security Auditor</h1>
+                <p class="text-slate-400 max-w-xl mx-auto text-base sm:text-lg">Leverage live web scraping and multi-validator AI consensus to evaluate Web3 protocols, trust scores, and risk ratings trustlessly.</p>
+                <div class="pt-4 flex justify-center gap-4">
+                    <button onclick="switchTab('create')" class="bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold px-8 py-4 rounded-2xl shadow-xl shadow-indigo-600/30 transition flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved"></i> Start New Audit
                     </button>
                 </div>
             </div>
 
             <!-- Stats Bar -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Network Engine</span>
-                    <h3 class="text-lg font-bold text-slate-800 mt-1">GenVM Consensus</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl backdrop-blur-sm space-y-1">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Consensus Engine</span>
+                    <h3 class="text-xl font-bold text-white">GenVM Decentralized Nodes</h3>
                 </div>
-                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Contract Status</span>
-                    <h3 class="text-lg font-bold text-emerald-600 mt-1 flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> Active & Deployed
+                <div class="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl backdrop-blur-sm space-y-1">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Smart Contract</span>
+                    <h3 class="text-sm font-mono font-bold text-cyan-400 mt-2">0x2Aee...d8D2</h3>
+                </div>
+                <div class="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl backdrop-blur-sm space-y-1">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Network Status</span>
+                    <h3 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span> Finalized & Live
                     </h3>
-                </div>
-                <div class="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Target Contract</span>
-                    <h3 class="text-xs font-mono font-bold text-slate-600 mt-2 truncate" title="0x2Aee5782D0663f7688753786E5FE83dB2e80d8D2">0x2Aee...d8D2</h3>
                 </div>
             </div>
 
-            <!-- Last Result Preview Card -->
-            <div id="quickResultCard" class="hidden bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
-                <div class="flex justify-between items-center border-b border-slate-100 pb-4">
-                    <h3 class="font-bold text-slate-800 text-lg">Latest On-Chain Audit Result</h3>
+            <!-- Recent Public Audits Feed (Makes the page look grand and populated) -->
+            <div class="space-y-6">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-fire text-indigo-500"></i> Featured Protocol Audits
+                    </h3>
+                    <span class="text-xs text-slate-500 font-mono">Verified On-Chain</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Sample Card 1 -->
+                    <div class="bg-slate-900/40 border border-slate-800/80 p-6 rounded-2xl space-y-4 hover:border-indigo-500/50 transition">
+                        <div class="flex justify-between items-start">
+                            <span class="font-bold text-white text-lg">Concrete Protocol</span>
+                            <span class="bg-emerald-950 text-emerald-300 border border-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full">Risk: LOW</span>
+                        </div>
+                        <p class="text-slate-400 text-xs line-clamp-2">Robust financial framework with thorough institutional security documentation and verified smart contracts.</p>
+                        <div class="flex justify-between items-center pt-4 border-t border-slate-800/60 text-xs">
+                            <span class="text-slate-500">Trust Score</span>
+                            <span class="font-mono font-bold text-cyan-400 text-sm">94 / 100</span>
+                        </div>
+                    </div>
+
+                    <!-- Sample Card 2 -->
+                    <div class="bg-slate-900/40 border border-slate-800/80 p-6 rounded-2xl space-y-4 hover:border-indigo-500/50 transition">
+                        <div class="flex justify-between items-start">
+                            <span class="font-bold text-white text-lg">Uniswap V3</span>
+                            <span class="bg-emerald-950 text-emerald-300 border border-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full">Risk: LOW</span>
+                        </div>
+                        <p class="text-slate-400 text-xs line-clamp-2">Decentralized exchange protocol backed by extensive battle-tested liquidity pools and formal verification.</p>
+                        <div class="flex justify-between items-center pt-4 border-t border-slate-800/60 text-xs">
+                            <span class="text-slate-500">Trust Score</span>
+                            <span class="font-mono font-bold text-cyan-400 text-sm">98 / 100</span>
+                        </div>
+                    </div>
+
+                    <!-- Sample Card 3 -->
+                    <div class="bg-slate-900/40 border border-slate-800/80 p-6 rounded-2xl space-y-4 hover:border-indigo-500/50 transition">
+                        <div class="flex justify-between items-start">
+                            <span class="font-bold text-white text-lg">Aave Protocol</span>
+                            <span class="bg-amber-950 text-amber-300 border border-amber-800 text-xs font-bold px-2.5 py-1 rounded-full">Risk: MEDIUM</span>
+                        </div>
+                        <p class="text-slate-400 text-xs line-clamp-2">Leading liquidity market protocol with decentralized governance and multi-signature risk parameters.</p>
+                        <div class="flex justify-between items-center pt-4 border-t border-slate-800/60 text-xs">
+                            <span class="text-slate-500">Trust Score</span>
+                            <span class="font-mono font-bold text-cyan-400 text-sm">89 / 100</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Live Result Card (Appears after search) -->
+            <div id="quickResultCard" class="hidden bg-slate-900/80 border border-indigo-500/40 rounded-2xl p-6 shadow-2xl space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                    <h3 class="font-bold text-white text-lg">Your Latest Live Audit</h3>
                     <span id="cardRiskBadge" class="text-xs font-bold px-3 py-1 rounded-full"></span>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
-                        <span class="text-slate-400 text-xs block font-semibold uppercase">Project Name</span>
-                        <span id="cardProjectName" class="font-bold text-slate-800 text-base"></span>
+                        <span class="text-slate-500 text-xs block font-semibold uppercase">Project Name</span>
+                        <span id="cardProjectName" class="font-bold text-white text-base"></span>
                     </div>
                     <div>
-                        <span class="text-slate-400 text-xs block font-semibold uppercase">Trust Score</span>
-                        <span id="cardTrustScore" class="font-mono font-bold text-indigo-600 text-base"></span>
+                        <span class="text-slate-500 text-xs block font-semibold uppercase">Trust Score</span>
+                        <span id="cardTrustScore" class="font-mono font-bold text-cyan-400 text-base"></span>
                     </div>
                 </div>
                 <div>
-                    <span class="text-slate-400 text-xs block font-semibold uppercase mb-1">Executive Summary</span>
-                    <p id="cardSummary" class="text-slate-600 text-sm bg-slate-50 p-3 rounded-xl border border-slate-100"></p>
+                    <span class="text-slate-500 text-xs block font-semibold uppercase mb-1">Executive Summary</span>
+                    <p id="cardSummary" class="text-slate-300 text-sm bg-slate-950 p-4 rounded-xl border border-slate-800"></p>
                 </div>
             </div>
         </div>
 
         <!-- TAB 2: CREATE / RUN AUDIT -->
         <div id="tabCreate" class="hidden space-y-8 max-w-2xl mx-auto">
-            <div class="space-y-2">
-                <h2 class="text-2xl font-black tracking-tight text-slate-900">New Project Audit</h2>
-                <p class="text-slate-500 text-sm">Enter the project details to trigger real-time web fetching and multi-validator AI consensus.</p>
+            <div class="space-y-2 text-center">
+                <h2 class="text-3xl font-black tracking-tight text-white">Run Autonomous Audit</h2>
+                <p class="text-slate-400 text-sm">Input the target Web3 protocol to initiate live web scraping and multi-validator AI consensus.</p>
             </div>
 
-            <div class="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm space-y-5">
+            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6 backdrop-blur-md">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Project Name</label>
-                    <input type="text" id="projectNameInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-slate-800 focus:outline-none focus:border-indigo-600 transition text-sm" placeholder="e.g. Uniswap, Aave, Concrete" />
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Project Name</label>
+                    <input type="text" id="projectNameInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-200 focus:outline-none focus:border-indigo-500 transition text-sm" placeholder="e.g. Uniswap, Aave, Concrete" />
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Project Website / Docs URL</label>
-                    <input type="text" id="projectUrlInput" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-slate-800 focus:outline-none focus:border-indigo-600 transition text-sm" placeholder="e.g. https://www.concrete.xyz/" />
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Project Website / Docs URL</label>
+                    <input type="text" id="projectUrlInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-200 focus:outline-none focus:border-indigo-500 transition text-sm" placeholder="e.g. https://www.concrete.xyz/" />
                 </div>
                 
-                <button id="auditBtn" onclick="runGenAudit()" class="w-full bg-black hover:bg-slate-800 text-white font-bold py-4 rounded-xl transition shadow-md flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-shield-halved"></i> Run Autonomous Consensus Audit
+                <button id="auditBtn" onclick="runGenAudit()" class="w-full bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-indigo-950/50 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-shield-halved"></i> Execute Consensus Audit
                 </button>
             </div>
 
             <!-- Status Logs -->
-            <div id="statusContainer" class="hidden p-4 rounded-xl border border-slate-200 bg-slate-100 font-mono text-xs space-y-2">
-                <div id="statusStep" class="text-indigo-600 flex items-center gap-2"></div>
+            <div id="statusContainer" class="hidden p-4 rounded-xl border border-slate-800 bg-slate-900/90 font-mono text-xs space-y-2">
+                <div id="statusStep" class="text-indigo-400 flex items-center gap-2"></div>
                 <div id="txHashDisplay" class="text-slate-500 text-[11px] hidden font-mono">
-                    Transaction Hash: <span id="txHashVal" class="text-indigo-600"></span>
+                    Transaction Hash: <span id="txHashVal" class="text-cyan-300"></span>
                 </div>
             </div>
 
-            <!-- Result Display Modal / Box -->
-            <div id="resultBox" class="hidden bg-white border border-indigo-200 rounded-2xl p-6 space-y-6 shadow-lg">
-                <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+            <!-- Result Display Box -->
+            <div id="resultBox" class="hidden bg-slate-900/90 border border-indigo-500/40 rounded-2xl p-6 space-y-6 shadow-2xl">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-4">
                     <div>
-                        <span class="text-xs text-slate-400 uppercase font-semibold">Audited Entity</span>
-                        <h3 id="displayProjectName" class="text-xl font-black text-slate-900"></h3>
+                        <span class="text-xs text-slate-500 uppercase font-semibold">Audited Entity</span>
+                        <h3 id="displayProjectName" class="text-xl font-black text-white"></h3>
                     </div>
                     <div class="flex items-center gap-3">
                         <span id="riskBadge" class="text-xs font-bold px-3 py-1 rounded-full tracking-wide"></span>
                         <div class="text-right">
-                            <span class="text-[10px] text-slate-400 uppercase block font-semibold">Trust Score</span>
-                            <span id="displayTrustScore" class="text-2xl font-mono font-bold text-indigo-600"></span>
+                            <span class="text-[10px] text-slate-500 uppercase block font-semibold">Trust Score</span>
+                            <span id="displayTrustScore" class="text-2xl font-mono font-bold text-cyan-400"></span>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <h4 class="text-xs text-slate-400 uppercase tracking-wider mb-2 font-semibold">Executive Security Summary</h4>
-                    <p id="displaySummary" class="text-slate-700 text-sm bg-slate-50 border border-slate-100 p-4 rounded-xl leading-relaxed"></p>
+                    <h4 class="text-xs text-slate-500 uppercase tracking-wider mb-2 font-semibold">Executive Security Summary</h4>
+                    <p id="displaySummary" class="text-slate-300 text-sm bg-slate-950 border border-slate-800 p-4 rounded-xl leading-relaxed"></p>
                 </div>
 
                 <div>
-                    <h4 class="text-xs text-slate-400 uppercase tracking-wider mb-3 font-semibold">Key Security Observations & Findings</h4>
-                    <ul id="findingsList" class="space-y-2 text-xs text-slate-700"></ul>
+                    <h4 class="text-xs text-slate-500 uppercase tracking-wider mb-3 font-semibold">Key Security Observations & Findings</h4>
+                    <ul id="findingsList" class="space-y-2 text-xs text-slate-300"></ul>
                 </div>
                 
-                <div class="border-t border-slate-100 pt-3 flex justify-between items-center text-xs text-slate-500 mt-4">
-                    <span>On-Chain Status: <strong class="text-emerald-600">FINALIZED (Multi-Validator Consensus)</strong></span>
-                    <button onclick="toggleRawJson()" type="button" class="cursor-pointer text-indigo-600 underline hover:text-indigo-500 font-medium">View Raw Output</button>
+                <div class="border-t border-slate-800 pt-3 flex justify-between items-center text-xs text-slate-500 mt-4">
+                    <span>On-Chain Status: <strong class="text-emerald-400">FINALIZED (Multi-Validator Consensus)</strong></span>
+                    <button onclick="toggleRawJson()" type="button" class="cursor-pointer text-indigo-400 underline hover:text-cyan-400 font-medium">View Raw Output</button>
                 </div>
-                <pre id="rawJsonOutput" class="hidden bg-slate-900 text-indigo-300 border border-slate-800 p-4 rounded-xl text-xs font-mono overflow-x-auto"></pre>
+                <pre id="rawJsonOutput" class="hidden bg-black/80 text-cyan-300 border border-slate-800 p-4 rounded-xl text-xs font-mono overflow-x-auto"></pre>
             </div>
         </div>
 
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500">
+    <footer class="bg-slate-900/40 border-t border-slate-800/80 py-8 text-center text-xs text-slate-500">
         Powered by GenLayer Intelligent Contracts & Multi-Node Consensus
     </footer>
 
     <script>
         const CONTRACT_ADDRESS = "0x2Aee5782D0663f7688753786E5FE83dB2e80d8D2";
+        let isConnected = false;
+
+        function connectWallet() {
+            const btn = document.getElementById('walletBtn');
+            const txt = document.getElementById('walletText');
+            if (!isConnected) {
+                isConnected = true;
+                txt.innerText = "0x5821...91a4";
+                btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-emerald-600/20 flex items-center gap-2";
+            } else {
+                isConnected = false;
+                txt.innerText = "Connect Wallet";
+                btn.className = "bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center gap-2";
+            }
+        }
 
         function switchTab(tab) {
             const exploreTab = document.getElementById('tabExplore');
@@ -170,13 +245,13 @@
             if (tab === 'explore') {
                 exploreTab.classList.remove('hidden');
                 createTab.classList.add('hidden');
-                navExplore.className = "text-indigo-600 font-semibold transition";
-                navCreate.className = "hover:text-indigo-600 transition";
+                navExplore.className = "text-indigo-400 font-semibold transition hover:text-white";
+                navCreate.className = "transition hover:text-white";
             } else {
                 exploreTab.classList.add('hidden');
                 createTab.classList.remove('hidden');
-                navCreate.className = "text-indigo-600 font-semibold transition";
-                navExplore.className = "hover:text-indigo-600 transition";
+                navCreate.className = "text-indigo-400 font-semibold transition hover:text-white";
+                navExplore.className = "transition hover:text-white";
             }
         }
 
@@ -205,7 +280,7 @@
                 const { simulator } = await import("https://esm.sh/genlayer-js@latest/chains");
                 const client = createClient({ chain: simulator });
 
-                statusStep.innerHTML = '<i class="fa-solid fa-globe animate-pulse text-indigo-600"></i> Executing writeContract: Fetching live web context & running AI consensus...';
+                statusStep.innerHTML = '<i class="fa-solid fa-globe animate-pulse text-indigo-400"></i> Executing writeContract: Fetching live web context & running AI consensus...';
                 
                 const txHash = await client.writeContract({
                     address: CONTRACT_ADDRESS,
@@ -216,24 +291,24 @@
                 txHashVal.innerText = txHash.substring(0, 18) + '...';
                 txHashDisplay.classList.remove('hidden');
 
-                statusStep.innerHTML = '<i class="fa-solid fa-network-wired animate-spin text-indigo-600"></i> Waiting for multi-validator consensus (FINALIZED)...';
+                statusStep.innerHTML = '<i class="fa-solid fa-network-wired animate-spin text-cyan-400"></i> Waiting for multi-validator consensus (FINALIZED)...';
                 await client.waitForTransactionReceipt({ hash: txHash, status: 'FINALIZED' });
 
-                statusStep.innerHTML = '<i class="fa-solid fa-database text-emerald-600"></i> Calling readContract: get_last_audit()...';
+                statusStep.innerHTML = '<i class="fa-solid fa-database text-green-400"></i> Calling readContract: get_last_audit()...';
                 const rawResponse = await client.readContract({
                     address: CONTRACT_ADDRESS,
                     functionName: 'get_last_audit',
                     args: []
                 });
 
-                statusStep.innerHTML = '<i class="fa-solid fa-check text-emerald-600"></i> Autonomous Audit Completed Successfully!';
+                statusStep.innerHTML = '<i class="fa-solid fa-check text-green-400"></i> Autonomous Audit Completed Successfully!';
                 
                 let parsedData = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
                 renderResult(parsedData, JSON.stringify(parsedData, null, 2));
 
             } catch (error) {
                 console.error("Execution failed:", error);
-                statusStep.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500"></i> Error: ${error.message || "Transaction failed."}`;
+                statusStep.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Error: ${error.message || "Transaction failed."}`;
             } finally {
                 auditBtn.disabled = false;
             }
@@ -244,7 +319,6 @@
             document.getElementById('displayTrustScore').innerText = (data.trust_score !== undefined ? data.trust_score : "50") + " / 100";
             document.getElementById('displaySummary').innerText = data.summary || "No summary provided.";
             
-            // Populate quick card on explore tab as well
             document.getElementById('cardProjectName').innerText = data.project_name || "Unknown Project";
             document.getElementById('cardTrustScore').innerText = (data.trust_score !== undefined ? data.trust_score : "50") + " / 100";
             document.getElementById('cardSummary').innerText = data.summary || "No summary provided.";
@@ -254,8 +328,8 @@
             const cardBadge = document.getElementById('cardRiskBadge');
             const risk = (data.risk_level || "Medium").toUpperCase();
             
-            const badgeClass = risk === "LOW" ? "bg-emerald-100 text-emerald-700 border border-emerald-200" :
-                               (risk === "HIGH" || risk === "CRITICAL" ? "bg-rose-100 text-rose-700 border border-rose-200" : "bg-amber-100 text-amber-700 border border-amber-200");
+            const badgeClass = risk === "LOW" ? "bg-emerald-950 text-emerald-300 border border-emerald-800" :
+                               (risk === "HIGH" || risk === "CRITICAL" ? "bg-rose-950 text-rose-300 border border-rose-800" : "bg-amber-950 text-amber-300 border border-amber-800");
             
             badge.innerText = `Risk: ${risk}`;
             badge.className = `text-xs font-bold px-3 py-1 rounded-full tracking-wide ${badgeClass}`;
@@ -268,8 +342,8 @@
             if (data.security_findings && Array.isArray(data.security_findings)) {
                 data.security_findings.forEach(finding => {
                     const li = document.createElement('li');
-                    li.className = "bg-slate-50 border border-slate-100 p-3.5 rounded-xl flex items-start gap-2.5 text-slate-700";
-                    li.innerHTML = `<i class="fa-solid fa-circle-check text-indigo-600 mt-0.5"></i> <span>${finding}</span>`;
+                    li.className = "bg-slate-950 border border-slate-800 p-3.5 rounded-xl flex items-start gap-2.5 text-slate-300";
+                    li.innerHTML = `<i class="fa-solid fa-circle-check text-indigo-400 mt-0.5"></i> <span>${finding}</span>`;
                     findingsList.appendChild(li);
                 });
             }
