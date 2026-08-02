@@ -311,15 +311,19 @@
             try {
                 const { createClient } = await import("https://esm.sh/genlayer-js@latest");
                 const { simulator } = await import("https://esm.sh/genlayer-js@latest/chains");
-                const client = createClient({ chain: simulator });
+                
+                // مقداردهی صحیح کلاینت همراه با اکانت متامسک
+                const client = createClient({ 
+                    chain: simulator,
+                    account: userAccount 
+                });
 
-                statusStep.innerHTML = '<i class="fa-solid fa-globe animate-pulse text-indigo-400"></i> Executing writeContract with your wallet account...';
+                statusStep.innerHTML = '<i class="fa-solid fa-globe animate-pulse text-indigo-400"></i> Executing writeContract: Fetching live web context & running AI consensus...';
                 
                 const txHash = await client.writeContract({
                     address: CONTRACT_ADDRESS,
                     functionName: 'audit_project',
-                    args: [projectName, projectUrl],
-                    account: userAccount
+                    args: [projectName, projectUrl]
                 });
 
                 txHashVal.innerText = txHash.substring(0, 18) + '...';
