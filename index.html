@@ -26,58 +26,12 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <button id="authNavBtn" onclick="openAuthModal('signup')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center gap-2">
-                    <i class="fa-solid fa-user-shield"></i> <span id="authNavText">Sign In / Up</span>
+                <button id="walletBtn" onclick="connectRealWallet()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center gap-2">
+                    <i class="fa-solid fa-wallet"></i> <span id="walletText">Connect MetaMask</span>
                 </button>
             </div>
         </div>
     </nav>
-
-    <!-- Clerk-Style Auth Modal (Sign In / Sign Up) -->
-    <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-        <div class="bg-white text-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden p-8 relative animate-in fade-in zoom-in duration-200">
-            <button onclick="closeAuthModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-lg">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-            
-            <div class="text-center space-y-2 mb-6">
-                <h3 id="modalTitle" class="text-2xl font-black tracking-tight text-slate-900">Create your account</h3>
-                <p id="modalSubtitle" class="text-xs text-slate-500">Welcome! Please fill in the details to get started.</p>
-            </div>
-
-            <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
-                <div id="nameFields" class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">First name</label>
-                        <input type="text" id="firstName" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="First name" />
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Last name</label>
-                        <input type="text" id="lastName" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="Last name" />
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Email address</label>
-                    <input type="email" id="emailAddr" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="Enter your email address" />
-                </div>
-
-                <div>
-                    <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Password</label>
-                    <input type="password" id="password" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="Enter password" />
-                </div>
-
-                <button type="submit" id="authSubmitBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/20 text-sm flex items-center justify-center gap-2">
-                    Continue <i class="fa-solid fa-arrow-right text-xs"></i>
-                </button>
-            </form>
-
-            <div class="mt-6 pt-4 border-t border-slate-100 text-center text-xs text-slate-500 flex justify-between items-center">
-                <span id="authSwitchText">Already have an account? <button type="button" onclick="toggleAuthMode()" class="text-indigo-600 font-bold hover:underline">Sign in</button></span>
-                <span>Secured by <strong class="text-slate-700 font-bold">Clerk</strong></span>
-            </div>
-        </div>
-    </div>
 
     <!-- Main Container -->
     <main class="max-w-6xl mx-auto w-full px-6 py-12 flex-grow">
@@ -113,7 +67,7 @@
                 <div class="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl backdrop-blur-sm space-y-1">
                     <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Network Status</span>
                     <h3 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span> Platform Active
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span> Testnet Finalized & Live
                     </h3>
                 </div>
             </div>
@@ -208,7 +162,7 @@
                 </div>
                 
                 <button id="auditBtn" onclick="runGenAudit()" class="w-full bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-indigo-950/50 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-shield-halved"></i> Execute Autonomous Consensus Audit
+                    <i class="fa-solid fa-shield-halved"></i> Execute On-Chain Consensus Audit
                 </button>
             </div>
 
@@ -263,101 +217,49 @@
 
     <script>
         const CONTRACT_ADDRESS = "0x2Aee5782D0663f7688753786E5FE83dB2e80d8D2";
-        let currentUser = localStorage.getItem('genAuditUser') ? JSON.parse(localStorage.getItem('genAuditUser')) : null;
-        let isSignInMode = false;
+        let userAccount = null;
 
-        window.addEventListener('DOMContentLoaded', () => {
-            if (currentUser) {
-                updateAuthUI(currentUser);
+        async function connectRealWallet() {
+            const btn = document.getElementById('walletBtn');
+            const txt = document.getElementById('walletText');
+
+            if (typeof window.ethereum === 'undefined') {
+                alert('MetaMask or Web3 Wallet not detected! Please install MetaMask to connect.');
+                return;
             }
-        });
 
-        function openAuthModal(mode = 'signup') {
-            isSignInMode = (mode === 'signin');
-            updateModalUI();
-            document.getElementById('authModal').classList.remove('hidden');
-        }
+            try {
+                btn.disabled = true;
+                txt.innerText = "Connecting...";
 
-        function closeAuthModal() {
-            document.getElementById('authModal').classList.add('hidden');
-        }
-
-        function toggleAuthMode() {
-            isSignInMode = !isSignInMode;
-            updateModalUI();
-        }
-
-        function updateModalUI() {
-            const title = document.getElementById('modalTitle');
-            const subtitle = document.getElementById('modalSubtitle');
-            const nameFields = document.getElementById('nameFields');
-            const submitBtn = document.getElementById('authSubmitBtn');
-            const switchText = document.getElementById('authSwitchText');
-
-            const firstNameInput = document.getElementById('firstName');
-            const lastNameInput = document.getElementById('lastName');
-
-            if (isSignInMode) {
-                title.innerText = "Sign in to your account";
-                subtitle.innerText = "Welcome back! Please enter your details.";
-                nameFields.style.display = "none";
-                firstNameInput.required = false;
-                lastNameInput.required = false;
-                submitBtn.innerText = "Sign In";
-                switchText.innerHTML = `Don't have an account? <button type="button" onclick="toggleAuthMode()" class="text-indigo-600 font-bold hover:underline">Sign up</button>`;
-            } else {
-                title.innerText = "Create your account";
-                subtitle.innerText = "Welcome! Please fill in the details to get started.";
-                nameFields.style.display = "grid";
-                firstNameInput.required = true;
-                lastNameInput.required = true;
-                submitBtn.innerText = "Continue";
-                switchText.innerHTML = `Already have an account? <button type="button" onclick="toggleAuthMode()" class="text-indigo-600 font-bold hover:underline">Sign in</button>`;
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                if (accounts && accounts.length > 0) {
+                    userAccount = accounts[0];
+                    const shortAddr = userAccount.substring(0, 6) + '...' + userAccount.substring(userAccount.length - 4);
+                    txt.innerText = shortAddr;
+                    btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-emerald-600/20 flex items-center gap-2";
+                }
+            } catch (error) {
+                console.error("Wallet connection failed:", error);
+                txt.innerText = "Connect MetaMask";
+                alert('Wallet connection rejected or failed.');
+            } finally {
+                btn.disabled = false;
             }
         }
 
-        function handleAuthSubmit(event) {
-            event.preventDefault();
-            const email = document.getElementById('emailAddr').value.trim();
-
-            if (isSignInMode) {
-                // Sign In flow: check if user exists in localStorage or create a session based on email
-                let existingUsers = JSON.parse(localStorage.getItem('genAuditUsersDB') || '{}');
-                if (existingUsers[email]) {
-                    currentUser = existingUsers[email];
+        if (typeof window.ethereum !== 'undefined') {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length > 0) {
+                    userAccount = accounts[0];
+                    const shortAddr = userAccount.substring(0, 6) + '...' + userAccount.substring(userAccount.length - 4);
+                    document.getElementById('walletText').innerText = shortAddr;
                 } else {
-                    // Fallback if email wasn't registered in this browser before
-                    const namePart = email.split('@')[0];
-                    currentUser = { name: namePart.charAt(0).toUpperCase() + namePart.slice(1), email: email };
+                    userAccount = null;
+                    document.getElementById('walletText').innerText = "Connect MetaMask";
+                    document.getElementById('walletBtn').className = "bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center gap-2";
                 }
-            } else {
-                // Sign Up flow
-                const firstName = document.getElementById('firstName').value.trim();
-                const lastName = document.getElementById('lastName').value.trim();
-                currentUser = { name: `${firstName} ${lastName}`, email: email };
-                
-                let existingUsers = JSON.parse(localStorage.getItem('genAuditUsersDB') || '{}');
-                existingUsers[email] = currentUser;
-                localStorage.setItem('genAuditUsersDB', JSON.stringify(existingUsers));
-            }
-
-            localStorage.setItem('genAuditUser', JSON.stringify(currentUser));
-            updateAuthUI(currentUser);
-            closeAuthModal();
-        }
-
-        function updateAuthUI(user) {
-            const btn = document.getElementById('authNavBtn');
-            const txt = document.getElementById('authNavText');
-            txt.innerText = user.name;
-            btn.className = "bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-emerald-600/20 flex items-center gap-2";
-            btn.onclick = () => {
-                if(confirm('Do you want to sign out?')) {
-                    localStorage.removeItem('genAuditUser');
-                    currentUser = null;
-                    location.reload();
-                }
-            };
+            });
         }
 
         function switchTab(tab) {
@@ -380,9 +282,9 @@
         }
 
         async function runGenAudit() {
-            if (!currentUser) {
-                alert('Please sign in or create an account first!');
-                openAuthModal('signin');
+            if (!userAccount) {
+                alert('Please connect your MetaMask wallet first!');
+                connectRealWallet();
                 return;
             }
 
@@ -403,26 +305,20 @@
             resultBox.classList.add('hidden');
             txHashDisplay.classList.add('hidden');
 
-            statusStep.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Initializing Autonomous Signer & GenVM Client...';
+            statusStep.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Connecting to GenLayer Testnet via MetaMask...';
 
             try {
                 const { createClient } = await import("https://esm.sh/genlayer-js@latest");
-                const { simulator } = await import("https://esm.sh/genlayer-js@latest/chains");
-                const { generatePrivateKey, privateKeyToAccount } = await import("https://esm.sh/viem/accounts");
-
-                let pKey = localStorage.getItem('genAuditBurnerKey');
-                if (!pKey) {
-                    pKey = generatePrivateKey();
-                    localStorage.setItem('genAuditBurnerKey', pKey);
-                }
-                const burnerAccount = privateKeyToAccount(pKey);
+                const { testnet } = await import("https://esm.sh/genlayer-js@latest/chains");
+                const { custom } = await import("https://esm.sh/viem");
 
                 const client = createClient({ 
-                    chain: simulator,
-                    account: burnerAccount 
+                    chain: testnet,
+                    transport: custom(window.ethereum),
+                    account: userAccount
                 });
 
-                statusStep.innerHTML = '<i class="fa-solid fa-globe animate-pulse text-indigo-400"></i> Executing writeContract & AI web scraping on-chain...';
+                statusStep.innerHTML = '<i class="fa-solid fa-wallet animate-pulse text-indigo-400"></i> Please check MetaMask to sign & confirm the transaction...';
                 
                 const txHash = await client.writeContract({
                     address: CONTRACT_ADDRESS,
@@ -443,7 +339,7 @@
                     args: []
                 });
 
-                statusStep.innerHTML = '<i class="fa-solid fa-check text-green-400"></i> Autonomous Audit Completed Successfully!';
+                statusStep.innerHTML = '<i class="fa-solid fa-check text-green-400"></i> On-Chain Audit Completed Successfully!';
                 
                 let parsedData = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
                 renderResult(parsedData, JSON.stringify(parsedData, null, 2));
