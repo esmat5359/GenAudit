@@ -26,14 +26,14 @@
                 </div>
             </div>
             <div class="flex items-center gap-3">
-                <button id="authNavBtn" onclick="openAuthModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center gap-2">
+                <button id="authNavBtn" onclick="openAuthModal('signup')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center gap-2">
                     <i class="fa-solid fa-user-shield"></i> <span id="authNavText">Sign In / Up</span>
                 </button>
             </div>
         </div>
     </nav>
 
-    <!-- Clerk-Style Auth Modal -->
+    <!-- Clerk-Style Auth Modal (Sign In / Sign Up) -->
     <div id="authModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
         <div class="bg-white text-slate-900 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden p-8 relative animate-in fade-in zoom-in duration-200">
             <button onclick="closeAuthModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 text-lg">
@@ -41,19 +41,19 @@
             </button>
             
             <div class="text-center space-y-2 mb-6">
-                <h3 class="text-2xl font-black tracking-tight text-slate-900">Create your account</h3>
-                <p class="text-xs text-slate-500">Welcome! Please fill in the details to get started.</p>
+                <h3 id="modalTitle" class="text-2xl font-black tracking-tight text-slate-900">Create your account</h3>
+                <p id="modalSubtitle" class="text-xs text-slate-500">Welcome! Please fill in the details to get started.</p>
             </div>
 
             <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
-                <div class="grid grid-cols-2 gap-3">
+                <div id="nameFields" class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">First name</label>
-                        <input type="text" id="firstName" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="First name" />
+                        <input type="text" id="firstName" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="First name" />
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Last name</label>
-                        <input type="text" id="lastName" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="Last name" />
+                        <input type="text" id="lastName" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="Last name" />
                     </div>
                 </div>
 
@@ -64,17 +64,17 @@
 
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-wider mb-1">Password</label>
-                    <input type="password" id="password" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="Create a password" />
+                    <input type="password" id="password" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:outline-none focus:border-indigo-600 transition" placeholder="Enter password" />
                 </div>
 
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/20 text-sm flex items-center justify-center gap-2">
+                <button type="submit" id="authSubmitBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-600/20 text-sm flex items-center justify-center gap-2">
                     Continue <i class="fa-solid fa-arrow-right text-xs"></i>
                 </button>
             </form>
 
-            <div class="mt-6 pt-4 border-t border-slate-100 text-center text-xs text-slate-400 flex flex-col gap-1">
+            <div class="mt-6 pt-4 border-t border-slate-100 text-center text-xs text-slate-500 flex justify-between items-center">
+                <span id="authSwitchText">Already have an account? <button type="button" onclick="toggleAuthMode()" class="text-indigo-600 font-bold hover:underline">Sign in</button></span>
                 <span>Secured by <strong class="text-slate-700 font-bold">Clerk</strong></span>
-                <span class="text-[10px] text-amber-600 font-mono">Development mode</span>
             </div>
         </div>
     </div>
@@ -264,6 +264,7 @@
     <script>
         const CONTRACT_ADDRESS = "0x2Aee5782D0663f7688753786E5FE83dB2e80d8D2";
         let currentUser = localStorage.getItem('genAuditUser') ? JSON.parse(localStorage.getItem('genAuditUser')) : null;
+        let isSignInMode = false;
 
         window.addEventListener('DOMContentLoaded', () => {
             if (currentUser) {
@@ -271,7 +272,9 @@
             }
         });
 
-        function openAuthModal() {
+        function openAuthModal(mode = 'signup') {
+            isSignInMode = (mode === 'signin');
+            updateModalUI();
             document.getElementById('authModal').classList.remove('hidden');
         }
 
@@ -279,15 +282,66 @@
             document.getElementById('authModal').classList.add('hidden');
         }
 
+        function toggleAuthMode() {
+            isSignInMode = !isSignInMode;
+            updateModalUI();
+        }
+
+        function updateModalUI() {
+            const title = document.getElementById('modalTitle');
+            const subtitle = document.getElementById('modalSubtitle');
+            const nameFields = document.getElementById('nameFields');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const switchText = document.getElementById('authSwitchText');
+
+            const firstNameInput = document.getElementById('firstName');
+            const lastNameInput = document.getElementById('lastName');
+
+            if (isSignInMode) {
+                title.innerText = "Sign in to your account";
+                subtitle.innerText = "Welcome back! Please enter your details.";
+                nameFields.style.display = "none";
+                firstNameInput.required = false;
+                lastNameInput.required = false;
+                submitBtn.innerText = "Sign In";
+                switchText.innerHTML = `Don't have an account? <button type="button" onclick="toggleAuthMode()" class="text-indigo-600 font-bold hover:underline">Sign up</button>`;
+            } else {
+                title.innerText = "Create your account";
+                subtitle.innerText = "Welcome! Please fill in the details to get started.";
+                nameFields.style.display = "grid";
+                firstNameInput.required = true;
+                lastNameInput.required = true;
+                submitBtn.innerText = "Continue";
+                switchText.innerHTML = `Already have an account? <button type="button" onclick="toggleAuthMode()" class="text-indigo-600 font-bold hover:underline">Sign in</button>`;
+            }
+        }
+
         function handleAuthSubmit(event) {
             event.preventDefault();
-            const firstName = document.getElementById('firstName').value.trim();
-            const lastName = document.getElementById('lastName').value.trim();
             const email = document.getElementById('emailAddr').value.trim();
 
-            currentUser = { name: `${firstName} ${lastName}`, email: email };
+            if (isSignInMode) {
+                // Sign In flow: check if user exists in localStorage or create a session based on email
+                let existingUsers = JSON.parse(localStorage.getItem('genAuditUsersDB') || '{}');
+                if (existingUsers[email]) {
+                    currentUser = existingUsers[email];
+                } else {
+                    // Fallback if email wasn't registered in this browser before
+                    const namePart = email.split('@')[0];
+                    currentUser = { name: namePart.charAt(0).toUpperCase() + namePart.slice(1), email: email };
+                }
+            } else {
+                // Sign Up flow
+                const firstName = document.getElementById('firstName').value.trim();
+                const lastName = document.getElementById('lastName').value.trim();
+                currentUser = { name: `${firstName} ${lastName}`, email: email };
+                
+                let existingUsers = JSON.parse(localStorage.getItem('genAuditUsersDB') || '{}');
+                existingUsers[email] = currentUser;
+                localStorage.setItem('genAuditUsersDB', JSON.stringify(existingUsers));
+            }
+
             localStorage.setItem('genAuditUser', JSON.stringify(currentUser));
-            
             updateAuthUI(currentUser);
             closeAuthModal();
         }
@@ -328,7 +382,7 @@
         async function runGenAudit() {
             if (!currentUser) {
                 alert('Please sign in or create an account first!');
-                openAuthModal();
+                openAuthModal('signin');
                 return;
             }
 
@@ -349,12 +403,24 @@
             resultBox.classList.add('hidden');
             txHashDisplay.classList.add('hidden');
 
-            statusStep.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Connecting to GenVM Decentralized Nodes...';
+            statusStep.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Initializing Autonomous Signer & GenVM Client...';
 
             try {
                 const { createClient } = await import("https://esm.sh/genlayer-js@latest");
                 const { simulator } = await import("https://esm.sh/genlayer-js@latest/chains");
-                const client = createClient({ chain: simulator });
+                const { generatePrivateKey, privateKeyToAccount } = await import("https://esm.sh/viem/accounts");
+
+                let pKey = localStorage.getItem('genAuditBurnerKey');
+                if (!pKey) {
+                    pKey = generatePrivateKey();
+                    localStorage.setItem('genAuditBurnerKey', pKey);
+                }
+                const burnerAccount = privateKeyToAccount(pKey);
+
+                const client = createClient({ 
+                    chain: simulator,
+                    account: burnerAccount 
+                });
 
                 statusStep.innerHTML = '<i class="fa-solid fa-globe animate-pulse text-indigo-400"></i> Executing writeContract & AI web scraping on-chain...';
                 
@@ -365,7 +431,7 @@
                 });
 
                 txHashVal.innerText = txHash.substring(0, 18) + '...';
-                txHashDisplay.classList.add('hidden');
+                txHashDisplay.classList.remove('hidden');
 
                 statusStep.innerHTML = '<i class="fa-solid fa-network-wired animate-spin text-cyan-400"></i> Waiting for multi-validator consensus (FINALIZED)...';
                 await client.waitForTransactionReceipt({ hash: txHash, status: 'FINALIZED' });
