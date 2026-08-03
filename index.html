@@ -178,7 +178,6 @@
             document.getElementById('navCreate').className = tab === 'create' ? "text-indigo-400 font-semibold" : "transition hover:text-white";
         }
 
-        // Robust Auto-Retry wrapper to prevent "Failed to fetch" drops
         async function retryOperation(fn, retries = 3, delay = 2000) {
             for (let i = 0; i < retries; i++) {
                 try {
@@ -189,6 +188,40 @@
                     await new Promise(res => setTimeout(res, delay));
                 }
             }
+        }
+
+        // Cache the genlayer-js client so we don't reconstruct it (and re-import the
+        // modules) on every single audit run.
+        let genlayerClient = null;
+
+        async function getGenlayerClient() {
+            if (genlayerClient) return genlayerClient;
+
+            const { createClient } = await import("https://esm.sh/genlayer-js@latest");
+            // IMPORTANT: genlayer-js/chains does NOT export a generic "testnet" symbol.
+            // The importable chain constants are: localnet, studionet, testnetAsimov,
+            // testnetBradbury (testnetBradbury is GenLayer's current public testnet).
+            // Importing a name that doesn't exist resolves to `undefined`, which is
+            // what was silently breaking this app: `chain: undefined` gave the SDK no
+            // RPC URL to call, and the browser's fetch() failed instantly with the
+            // generic "Failed to fetch" error you were seeing.
+            const { testnetBradbury } = await import("https://esm.sh/genlayer-js@latest/chains");
+
+            // NOTE: genlayer-js's createClient() does NOT take a raw viem `transport`
+            // option the way viem's own createWalletClient()/createPublicClient() do.
+            // genlayer-js manages its own transport to the GenLayer consensus RPC
+            // internally. For MetaMask-based signing you simply pass the connected
+            // address as a plain string for `account` — genlayer-js then detects
+            // `window.ethereum` on its own and asks MetaMask to sign when a write is
+            // submitted. Passing `transport: custom(window.ethereum)` (viem's API)
+            // here was being silently ignored, and combined with the undefined chain
+            // above is what produced the RPC error.
+            genlayerClient = createClient({
+                chain: testnetBradbury,
+                account: userAccount,
+            });
+
+            return genlayerClient;
         }
 
         async function runGenAudit() {
@@ -214,19 +247,14 @@
             statusStep.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Connecting to GenLayer Testnet...';
 
             try {
-                const { createClient } = await import("https://esm.sh/genlayer-js@latest");
-                const { testnet } = await import("https://esm.sh/genlayer-js@latest/chains");
-                const { custom } = await import("https://esm.sh/viem");
-
-                const client = createClient({ 
-                    chain: testnet,
-                    transport: custom(window.ethereum),
-                    account: userAccount
-                });
+                // Rebuild the client if the connected account changed since last run.
+                if (genlayerClient && genlayerClient.account !== userAccount) {
+                    genlayerClient = null;
+                }
+                const client = await getGenlayerClient();
 
                 statusStep.innerHTML = '<i class="fa-solid fa-wallet animate-pulse text-indigo-400"></i> Please check MetaMask to sign the transaction...';
-                
-                // Wrap contract write with auto-retry mechanism
+
                 const txHash = await retryOperation(async () => {
                     return await client.writeContract({
                         address: CONTRACT_ADDRESS,
