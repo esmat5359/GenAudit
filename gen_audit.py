@@ -1,94 +1,315 @@
-# v0.2.17
-# { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenAudit - Autonomous Web3 Trust & Security Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-indigo-500 selection:text-white">
+    
+    <!-- Navbar -->
+    <nav class="bg-slate-900/80 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+            <div class="flex items-center gap-10">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('explore')">
+                    <div class="w-10 h-10 bg-gradient-to-tr from-indigo-600 to-cyan-500 rounded-2xl flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-500/30 text-white">G</div>
+                    <div>
+                        <span class="text-xl font-black tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">GenAudit</span>
+                        <span class="block text-[10px] text-indigo-400 font-mono tracking-widest uppercase">Protocol Shield</span>
+                    </div>
+                </div>
+                <div class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
+                    <button onclick="switchTab('explore')" id="navExplore" class="text-indigo-400 font-semibold transition hover:text-white">Explore Audits</button>
+                    <button onclick="switchTab('create')" id="navCreate" class="transition hover:text-white">New Consensus Audit</button>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="walletBtn" onclick="connectRealWallet()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow-lg shadow-indigo-600/20 flex items-center gap-2">
+                    <i class="fa-solid fa-wallet"></i> <span id="walletText">Connect MetaMask</span>
+                </button>
+            </div>
+        </div>
+    </nav>
 
-import json
-import urllib.request
-from genlayer import *
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto w-full px-6 py-12 flex-grow">
+        
+        <!-- TAB 1: EXPLORE -->
+        <div id="tabExplore" class="space-y-12">
+            <div class="text-center space-y-4 py-8 relative overflow-hidden">
+                <div class="absolute inset-0 -z-10 flex items-center justify-center opacity-20 blur-3xl">
+                    <div class="w-96 h-96 bg-indigo-600 rounded-full"></div>
+                    <div class="w-96 h-96 bg-cyan-600 rounded-full"></div>
+                </div>
+                <span class="text-xs bg-indigo-950 text-indigo-300 border border-indigo-800/60 px-4 py-1.5 rounded-full font-mono uppercase tracking-widest">GenVM Bradbury Testnet</span>
+                <h1 class="text-4xl sm:text-6xl font-black tracking-tight text-white max-w-3xl mx-auto leading-tight">Autonomous On-Chain Trust & Security Auditor</h1>
+                <p class="text-slate-400 max-w-xl mx-auto text-base sm:text-lg">Decentralized multi-validator security platform live on GenLayer Bradbury Testnet.</p>
+                <div class="pt-4 flex justify-center gap-4">
+                    <button onclick="switchTab('create')" class="bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold px-8 py-4 rounded-2xl shadow-xl transition flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved"></i> Start New Audit
+                    </button>
+                </div>
+            </div>
 
-class GenAudit(gl.Contract):
-    last_project: str
-    last_trust_score: u256
-    last_risk_level: str
-    last_summary: str
-    last_audit_json: str
-    total_audits: u256
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl space-y-1">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Consensus Engine</span>
+                    <h3 class="text-xl font-bold text-white">Bradbury Testnet Nodes</h3>
+                </div>
+                <div class="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl space-y-1">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Smart Contract</span>
+                    <h3 class="text-xs font-mono font-bold text-cyan-400 mt-2">0x15aa...672D</h3>
+                </div>
+                <div class="bg-slate-900/60 border border-slate-800 p-6 rounded-2xl space-y-1">
+                    <span class="text-xs font-semibold text-slate-500 uppercase">Network Status</span>
+                    <h3 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span> Public Testnet Live
+                    </h3>
+                </div>
+            </div>
 
-    def __init__(self):
-        self.last_project = ""
-        self.last_trust_score = u256(0)
-        self.last_risk_level = "Unknown"
-        self.last_summary = ""
-        self.last_audit_json = "{}"
-        self.total_audits = u256(0)
+            <!-- Quick Result Card -->
+            <div id="quickResultCard" class="hidden bg-slate-900/80 border border-indigo-500/40 rounded-2xl p-6 shadow-2xl space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                    <h3 class="font-bold text-white text-lg">Your Latest Testnet Audit</h3>
+                    <span id="cardRiskBadge" class="text-xs font-bold px-3 py-1 rounded-full"></span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div><span class="text-slate-500 text-xs block uppercase">Project Name</span><span id="cardProjectName" class="font-bold text-white text-base"></span></div>
+                    <div><span class="text-slate-500 text-xs block uppercase">Trust Score</span><span id="cardTrustScore" class="font-mono font-bold text-cyan-400 text-base"></span></div>
+                </div>
+                <div><span class="text-slate-500 text-xs block uppercase mb-1">Executive Summary</span><p id="cardSummary" class="text-slate-300 text-sm bg-slate-950 p-4 rounded-xl border border-slate-800"></p></div>
+            </div>
+        </div>
 
-    @gl.public.write
-    def audit_project(self, project_name: str, target_url: str) -> str:
-        p_name = project_name.strip()
-        url = target_url.strip()
-        if not url.startswith("http"):
-            url = "https://" + url
+        <!-- TAB 2: CREATE -->
+        <div id="tabCreate" class="hidden space-y-8 max-w-2xl mx-auto">
+            <div class="space-y-2 text-center">
+                <h2 class="text-3xl font-black tracking-tight text-white">Run Autonomous Audit</h2>
+                <p class="text-slate-400 text-sm">Execute decentralized AI consensus on GenLayer Bradbury Testnet.</p>
+            </div>
 
-        # Fetching live context from the web securely
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
-        try:
-            with urllib.request.urlopen(req, timeout=10) as response:
-                web_context = response.read().decode('utf-8')[:4000]
-        except Exception:
-            # Fallback live financial endpoint for crypto/Web3 context
-            fallback_url = f"https://www.coingecko.com/en/coins/{p_name.lower().replace(' ', '-')}"
-            try:
-                req_fb = urllib.request.Request(fallback_url, headers={'User-Agent': 'Mozilla/5.0'})
-                with urllib.request.urlopen(req_fb, timeout=10) as resp_fb:
-                    web_context = resp_fb.read().decode('utf-8')[:4000]
-            except Exception:
-                web_context = f"Autonomous Web3 project audit context for {p_name} at {url}."
+            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Project Name</label>
+                    <input type="text" id="projectNameInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-200 focus:outline-none focus:border-indigo-500 text-sm" placeholder="e.g. Concrete, Uniswap" />
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Project Website / Docs URL</label>
+                    <input type="text" id="projectUrlInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-slate-200 focus:outline-none focus:border-indigo-500 text-sm" placeholder="e.g. https://www.concrete.xyz/" />
+                </div>
+                <button id="auditBtn" onclick="runGenAudit()" class="w-full bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold py-4 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-shield-halved"></i> Execute Testnet Consensus Audit
+                </button>
+            </div>
 
-        prompt = f"""
-        You are an expert Web3 smart contract auditor and security risk analyst. Conduct a comprehensive security and trust assessment of the project: {p_name} based on the live fetched source context below.
+            <!-- Status Logs -->
+            <div id="statusContainer" class="hidden p-4 rounded-xl border border-slate-800 bg-slate-900/90 font-mono text-xs space-y-2">
+                <div id="statusStep" class="text-indigo-400 flex items-center gap-2"></div>
+                <div id="txHashDisplay" class="text-slate-500 text-[11px] hidden font-mono">
+                    Transaction Hash: <span id="txHashVal" class="text-cyan-300"></span>
+                </div>
+            </div>
 
-        Project URL: {url}
-        Live Source Context:
-        {web_context}
+            <!-- Result Display -->
+            <div id="resultBox" class="hidden bg-slate-900/90 border border-indigo-500/40 rounded-2xl p-6 space-y-6 shadow-2xl">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                    <div><span class="text-xs text-slate-500 uppercase">Audited Entity</span><h3 id="displayProjectName" class="text-xl font-black text-white"></h3></div>
+                    <div class="flex items-center gap-3">
+                        <span id="riskBadge" class="text-xs font-bold px-3 py-1 rounded-full"></span>
+                        <div class="text-right"><span class="text-[10px] text-slate-500 uppercase block">Trust Score</span><span id="displayTrustScore" class="text-2xl font-mono font-bold text-cyan-400"></span></div>
+                    </div>
+                </div>
+                <div><h4 class="text-xs text-slate-500 uppercase mb-2 font-semibold">Executive Security Summary</h4><p id="displaySummary" class="text-slate-300 text-sm bg-slate-950 border border-slate-800 p-4 rounded-xl"></p></div>
+                <div><h4 class="text-xs text-slate-500 uppercase mb-3 font-semibold">Key Security Observations & Findings</h4><ul id="findingsList" class="space-y-2 text-xs text-slate-300"></ul></div>
+                <div class="border-t border-slate-800 pt-3 flex justify-between items-center text-xs text-slate-500">
+                    <span>On-Chain Status: <strong class="text-emerald-400">ACCEPTED (Multi-Validator Consensus)</strong></span>
+                    <button onclick="toggleRawJson()" type="button" class="text-indigo-400 underline">View Raw Output</button>
+                </div>
+                <pre id="rawJsonOutput" class="hidden bg-black/80 text-cyan-300 border border-slate-800 p-4 rounded-xl text-xs font-mono overflow-x-auto"></pre>
+            </div>
+        </div>
+    </main>
 
-        Evaluation Rules for Multi-Validator Consensus:
-        - "project_name": string
-        - "trust_score": integer from 0 to 100 representing overall reliability and security.
-        - "risk_level": string strictly ("Low", "Medium", "High", or "Critical").
-        - "security_findings": list of strings detailing key observations (e.g., audits, documentation, transparency).
-        - "summary": a concise 2-sentence executive summary of the audit.
+    <footer class="bg-slate-900/40 border-t border-slate-800 py-8 text-center text-xs text-slate-500">
+        GenLayer Bradbury Testnet Environment
+    </footer>
 
-        Respond strictly in valid JSON format with keys: "project_name", "trust_score", "risk_level", "security_findings", and "summary".
-        """
+    <script>
+        const CONTRACT_ADDRESS = "0x15aaa6C38f1281dB0f6F46B578c8c0b3D7Dd672D";
+        let userAccount = null;
 
-        res = gl.eq_principle.prompt_non_comparative(
-            lambda: prompt,
-            task=f"Conduct autonomous Web3 audit for {p_name} using live web context",
-            criteria="Validators must independently agree on the trust score, risk level, and security findings derived from the actual fetched source evidence, returning a valid JSON object with project_name, trust_score, risk_level, security_findings, and summary."
-        )
+        async function connectRealWallet() {
+            const btn = document.getElementById('walletBtn');
+            const txt = document.getElementById('walletText');
 
-        try:
-            parsed = json.loads(str(res))
-            t_score = int(parsed.get("trust_score", 50))
-            r_level = str(parsed.get("risk_level", "Medium"))
-            summary_val = str(parsed.get("summary", ""))
-        except Exception:
-            t_score = 50
-            r_level = "Medium"
-            summary_val = str(res)
+            if (typeof window.ethereum === 'undefined') {
+                alert('MetaMask or Web3 Wallet not detected! Please install MetaMask.');
+                return;
+            }
 
-        self.last_project = p_name
-        self.last_trust_score = u256(t_score)
-        self.last_risk_level = r_level
-        self.last_summary = summary_val
-        self.last_audit_json = str(res)
-        self.total_audits = self.total_audits + u256(1)
+            try {
+                btn.disabled = true;
+                txt.innerText = "Connecting...";
 
-        return str(res)
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                if (accounts && accounts.length > 0) {
+                    userAccount = accounts[0];
+                    const shortAddr = userAccount.substring(0, 6) + '...' + userAccount.substring(userAccount.length - 4);
+                    txt.innerText = shortAddr;
+                    btn.className = "bg-emerald-600 text-white text-xs font-bold px-5 py-3 rounded-xl flex items-center gap-2";
+                }
+            } catch (error) {
+                console.error("Wallet connection failed:", error);
+                txt.innerText = "Connect MetaMask";
+                alert('Wallet connection rejected.');
+            } finally {
+                btn.disabled = false;
+            }
+        }
 
-    @gl.public.view
-    def get_last_audit(self) -> str:
-        return self.last_audit_json
+        function switchTab(tab) {
+            document.getElementById('tabExplore').classList.toggle('hidden', tab !== 'explore');
+            document.getElementById('tabCreate').classList.toggle('hidden', tab !== 'create');
+            document.getElementById('navExplore').className = tab === 'explore' ? "text-indigo-400 font-semibold" : "transition hover:text-white";
+            document.getElementById('navCreate').className = tab === 'create' ? "text-indigo-400 font-semibold" : "transition hover:text-white";
+        }
 
-    @gl.public.view
-    def get_stats(self) -> u256:
-        return self.total_audits
+        function withTimeout(promise, ms, errorMessage) {
+            let timeoutId;
+            const timeoutPromise = new Promise((_, reject) => {
+                timeoutId = setTimeout(() => reject(new Error(errorMessage)), ms);
+            });
+            return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+        }
+
+        let genlayerClient = null;
+
+        async function getGenlayerClient() {
+            if (genlayerClient) return genlayerClient;
+
+            const { createClient } = await import("https://esm.sh/genlayer-js@latest");
+            const { testnetBradbury } = await import("https://esm.sh/genlayer-js@latest/chains");
+
+            genlayerClient = createClient({
+                chain: testnetBradbury,
+                account: userAccount,
+            });
+
+            return genlayerClient;
+        }
+
+        async function runGenAudit() {
+            if (!userAccount) { alert('Please connect your MetaMask wallet first!'); connectRealWallet(); return; }
+
+            const projectName = document.getElementById('projectNameInput').value.trim();
+            const projectUrl = document.getElementById('projectUrlInput').value.trim();
+            const auditBtn = document.getElementById('auditBtn');
+
+            if (!projectName || !projectUrl) return alert('Please enter both project name and website URL.');
+
+            const statusContainer = document.getElementById('statusContainer');
+            const statusStep = document.getElementById('statusStep');
+            const txHashDisplay = document.getElementById('txHashDisplay');
+            const txHashVal = document.getElementById('txHashVal');
+            const resultBox = document.getElementById('resultBox');
+            const quickResultCard = document.getElementById('quickResultCard');
+
+            auditBtn.disabled = true;
+            statusContainer.classList.remove('hidden');
+            
+            // مخفی کردن نتایج قبلی در شروع کار جدید
+            resultBox.classList.add('hidden');
+            quickResultCard.classList.add('hidden');
+            txHashDisplay.classList.add('hidden');
+
+            statusStep.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Connecting to Bradbury Testnet...';
+
+            try {
+                if (genlayerClient && genlayerClient.account !== userAccount) {
+                    genlayerClient = null;
+                }
+                const client = await getGenlayerClient();
+
+                statusStep.innerHTML = '<i class="fa-solid fa-wallet animate-pulse text-indigo-400"></i> Please check MetaMask to sign the transaction...';
+
+                const txHash = await client.writeContract({
+                    address: CONTRACT_ADDRESS,
+                    functionName: 'audit_project',
+                    args: [projectName, projectUrl]
+                });
+
+                txHashVal.innerText = txHash.substring(0, 18) + '...';
+                txHashDisplay.classList.remove('hidden');
+
+                statusStep.innerHTML = '<i class="fa-solid fa-network-wired animate-spin text-cyan-400"></i> Waiting for AI multi-validator consensus (ACCEPTED)...';
+                
+                await withTimeout(
+                    client.waitForTransactionReceipt({ 
+                        hash: txHash, 
+                        status: 'ACCEPTED',
+                        retries: 40,
+                        interval: 4000
+                    }),
+                    120000,
+                    "Timed out waiting for transaction consensus (ACCEPTED)."
+                );
+
+                statusStep.innerHTML = '<i class="fa-solid fa-database text-green-400"></i> Reading finalized audit from contract...';
+                
+                const rawResponse = await client.readContract({
+                    address: CONTRACT_ADDRESS,
+                    functionName: 'get_last_audit',
+                    args: []
+                });
+
+                statusStep.innerHTML = '<i class="fa-solid fa-check text-green-400"></i> On-Chain Audit Completed Successfully!';
+                let parsedData = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
+                renderResult(parsedData, JSON.stringify(parsedData, null, 2));
+
+            } catch (error) {
+                console.error("Execution failed:", error);
+                statusStep.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Audit Error: ${error.message || "Transaction failed."}`;
+            } finally {
+                auditBtn.disabled = false;
+            }
+        }
+
+        function renderResult(data, rawJson) {
+            document.getElementById('displayProjectName').innerText = data.project_name || "Unknown Project";
+            document.getElementById('displayTrustScore').innerText = (data.trust_score !== undefined ? data.trust_score : "50") + " / 100";
+            document.getElementById('displaySummary').innerText = data.summary || "No summary provided.";
+            document.getElementById('cardProjectName').innerText = data.project_name || "Unknown Project";
+            document.getElementById('cardTrustScore').innerText = (data.trust_score !== undefined ? data.trust_score : "50") + " / 100";
+            document.getElementById('cardSummary').innerText = data.summary || "No summary provided.";
+            document.getElementById('quickResultCard').classList.remove('hidden');
+
+            const badge = document.getElementById('riskBadge');
+            const cardBadge = document.getElementById('cardRiskBadge');
+            const risk = (data.risk_level || "Medium").toUpperCase();
+            const cls = risk === "LOW" ? "bg-emerald-950 text-emerald-300 border border-emerald-800" : "bg-amber-950 text-amber-300 border border-amber-800";
+            
+            badge.innerText = `Risk: ${risk}`; badge.className = `text-xs font-bold px-3 py-1 rounded-full ${cls}`;
+            cardBadge.innerText = `Risk: ${risk}`; cardBadge.className = `text-xs font-bold px-3 py-1 rounded-full ${cls}`;
+
+            const list = document.getElementById('findingsList');
+            list.innerHTML = '';
+            if (data.security_findings && Array.isArray(data.security_findings)) {
+                data.security_findings.forEach(f => {
+                    const li = document.createElement('li');
+                    li.className = "bg-slate-950 border border-slate-800 p-3.5 rounded-xl flex items-start gap-2 text-slate-300";
+                    li.innerHTML = `<i class="fa-solid fa-circle-check text-indigo-400 mt-0.5"></i> <span>${f}</span>`;
+                    list.appendChild(li);
+                });
+            }
+            document.getElementById('rawJsonOutput').innerText = rawJson;
+            document.getElementById('resultBox').classList.remove('hidden');
+        }
+
+        function toggleRawJson() { document.getElementById('rawJsonOutput').classList.toggle('hidden'); }
+    </script>
+</body>
+</html>
